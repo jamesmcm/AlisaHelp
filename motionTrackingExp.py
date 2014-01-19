@@ -54,12 +54,13 @@ class TrackingObject():
             #print( self.shape.fillColor)
 
         def getDistToMouseIfHitByMouse(self, mouse):
-             if mouse.isPressedIn(self.shape):
+             if mouse.isPressedIn(self.shapes[0]) or mouse.isPressedIn(self.shapes[1])  or mouse.isPressedIn(self.shapes[2])  or mouse.isPressedIn(self.shapes[3]):
                 mouse_pos = mouse.getPos()
-                dist = ((mouse_pos[0] - self.shape.pos[0])**2 + (mouse_pos[1] - self.shape.pos[1])**2) ** 0.5
+                #dist = ((mouse_pos[0] - self.shape.pos[0])**2 + (mouse_pos[1] - self.shape.pos[1])**2) ** 0.5
+                dist = ((mouse_pos[0] - self.position[0])**2 + (mouse_pos[1] - self.position[1])**2) ** 0.5
                 return (dist)
              else:
-                return (-1)
+                return None
 
         def changeMarkedAsTargetState(self):
             self.is_marked = not self.is_marked
@@ -76,10 +77,18 @@ class TrackingObject():
             self.position[1] += self.speed[1]
 
             newinnerpos = [self.innerpos[0] + 1.1*self.speed[0], self.innerpos[1] + 1.1*self.speed[1]]
+            #Ideally want to move along circle somehow - co-ordinates from main velocity, match to circle co-ordinates
+            #instead use trig - tan(theta)=o/a then get theta, use sin and cos to get back circle co-ords
+            #see if straight line movement seems realistic or want motion across circle
 
             if ((-1*self.radius)+self.innerradius <= newinnerpos[0] <= self.radius - self.innerradius) and  ((-1*self.radius)+self.innerradius <= newinnerpos[1] <= self.radius - self.innerradius):
-                    self.innerpos[0] += 1.1*self.speed[0]
-                    self.innerpos[1] += 1.1*self.speed[1]
+                    self.innerpos[0] += 1.05*self.speed[0]
+                    self.innerpos[1] += 1.05*self.speed[1]
+            elif ((-1*self.radius)+self.innerradius <= newinnerpos[0] <= self.radius - self.innerradius) and not ((-1*self.radius)+self.innerradius <= newinnerpos[1] <= self.radius - self.innerradius):
+                    self.innerpos[0] += 1.05*self.speed[0]
+            #elif not ((-1*self.radius)+self.innerradius <= newinnerpos[0] <= self.radius - self.innerradius) and ((-1*self.radius)+self.innerradius <= newinnerpos[1] <= self.radius - self.innerradius):
+                    #self.innerpos[1] += 1.05*self.speed[1]
+                    # get co-ordinates back from main velocity, find outermost co-ordinates of circle which match this
 
         def _boundaries(self):  # abpraller
             if not (self.tracking_area[0] + (2*self.radius) <= self.position[0] <= self.tracking_area[1] - (2*self.radius)):
@@ -164,8 +173,8 @@ class Trial:
                     dist_mouse_to_clicked_object = 0
                     for tracking_object in self.tracking_objects:
                         dist_to_mouse = tracking_object.getDistToMouseIfHitByMouse( self.mouse )
-                        if dist_to_mouse >= 0:
-                            if clicked_object == None or dist_to_mouse < dist_mouse_to_clicked_object:
+                        if dist_to_mouse is not None:
+                            if clicked_object is None or dist_to_mouse < dist_mouse_to_clicked_object:
                                 clicked_object = tracking_object
                                 dist_mouse_to_clicked_object = dist_to_mouse
                     if clicked_object is not None:
