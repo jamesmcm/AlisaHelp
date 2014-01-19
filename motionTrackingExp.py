@@ -15,15 +15,20 @@ class TrackingObject():
             self.tracking_area = tracking_area
 
             self.radius = 0.5
-            self.shape = visual.Circle(win=window, radius=self.radius, fillColor=[1.0, 1.0, 1.0])
-
+            self.innerradius=0.2
+            outercircle = visual.Circle(win=window, radius=self.radius, fillColor=[1.0, 1.0, 1.0])
+            self.shapes = [outercircle, outercircle]
+            innercircle = visual.Circle(win=window, radius=self.innerradius, fillColor=[0.0, 0.0, 0.0])
+            self.shapes+=[innercircle, innercircle]
             # Zufällige Startposition
-            x = random.random() * (tracking_area[1] - tracking_area[0] - 2 * self.radius) + tracking_area[0] + self.radius  # random.randint(size, width-size)
+            x = random.random() * (tracking_area[1] - tracking_area[0] - 4 * self.radius) + tracking_area[0] + (2*self.radius)  # random.randint(size, width-size)
             y = random.random() * (tracking_area[3] - tracking_area[2] - 2 * self.radius) + tracking_area[2] + self.radius  # random.randint(size, height-size)
             self.position = [x, y]
 
             start_direction = random.randrange(0, 360)
             radial_speed = 0.05  # ToDo: Hier Grad pro Frame, ändern in Grad pro Sekunde
+
+            self.innerpos=[0,0]
 
             self.speed = [radial_speed*math.cos(math.radians(start_direction)),
                         radial_speed*math.sin(math.radians(start_direction))]
@@ -33,11 +38,18 @@ class TrackingObject():
             self._boundaries()
 
         def draw(self):
-            self.shape.setPos(self.position)
-            self.shape.draw()
+            sc = lambda(x): (2*x)-1
+            for i in range(2):
+                self.shapes[i].setPos([self.position[0]+(sc(i)*self.radius), self.position[1]])
+                self.shapes[i+2].setPos([self.position[0]+(sc(i)*self.radius)+self.innerpos[0], self.position[1]+self.innerpos[1]])
+                self.shapes[i].draw()
+                self.shapes[i+2].draw()
+
+
 
         def setColor(self, color):
-            self.shape.setFillColor(color)
+            for s in self.shapes[:2]:
+                s.setFillColor(color)
             #print ("setcolor")
             #print( self.shape.fillColor)
 
@@ -63,10 +75,18 @@ class TrackingObject():
             self.position[0] += self.speed[0]
             self.position[1] += self.speed[1]
 
+            newinnerpos = [self.innerpos[0] + 1.1*self.speed[0], self.innerpos[1] + 1.1*self.speed[1]]
+
+            if ((-1*self.radius)+self.innerradius <= newinnerpos[0] <= self.radius - self.innerradius) and  ((-1*self.radius)+self.innerradius <= newinnerpos[1] <= self.radius - self.innerradius):
+                    self.innerpos[0] += 1.1*self.speed[0]
+                    self.innerpos[1] += 1.1*self.speed[1]
+
         def _boundaries(self):  # abpraller
-            for i in (0, 1):
-                if not (self.tracking_area[2*i] + self.radius <= self.position[i] <= self.tracking_area[2*i + 1] - self.radius):
-                    self.speed[i] *= -1
+            if not (self.tracking_area[0] + (2*self.radius) <= self.position[0] <= self.tracking_area[1] - (2*self.radius)):
+                self.speed[0] *= -1
+
+            if not (self.tracking_area[2] + self.radius <= self.position[1] <= self.tracking_area[3] - self.radius):
+                self.speed[1] *= -1
                 #if not (0 <= self.rect[i] <= bounding_rect.size[i]-self.rect.size[i]):
                 #    self.speed[i] *= -1
 
